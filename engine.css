@@ -210,6 +210,13 @@ html{scroll-behavior:smooth}
 .sl{display:grid;grid-template-columns:repeat(3,1fr);gap:.4em}
 .sl span{position:relative;text-align:center;padding:.5em 0;border-radius:.7em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);font-size:.76em;line-height:1.3;font-variant-numeric:tabular-nums}
 
+.oc{display:grid;grid-template-columns:2.3em minmax(0,1fr);gap:.6em;align-items:center;padding:.42em .5em;border-radius:.8em;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.oc>i{display:grid;place-items:center;width:2.3em;height:2.3em;border-radius:.7em;background:rgba(255,211,92,.15);color:#FFD35C}
+.oc>i svg{width:1.15em;height:1.15em}
+.oc p{display:grid;gap:.12em;min-width:0}
+.oc b{font-size:.84em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oc small{font-size:.66em;color:#9AA69D}
+
 /* 07 analyse */
 .tb{display:flex;gap:.3em;flex:none}
 .tb span{font-size:.7em;padding:.36em .75em;border-radius:1em;color:#9AA69D;background:rgba(255,255,255,.04)}
@@ -416,6 +423,23 @@ html{scroll-behavior:smooth}
 .v-bars .kt{display:grid;gap:8px}
 .v-bars .kt span{font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;border-radius:10px}
 .v-bars .k{background:rgba(68,184,116,.2);color:#8BE0AE}.v-bars .t{background:rgba(255,211,92,.16);color:#FFD35C}.v-bars .d{background:rgba(217,138,147,.18);color:#F0A9B1}
+
+/* ================= whatever you sell */
+.sell{display:grid;gap:16px}
+@media(min-width:720px){.sell{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1040px){.sell{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.so{gap:12px;align-content:stretch;grid-template-rows:auto auto 1fr auto}
+.so h3{font-size:clamp(24px,2vw,30px)}
+.so>p:not(.so-path){font-size:16.5px;line-height:1.58;text-wrap:pretty}
+.so-path{display:flex;flex-wrap:wrap;align-items:center;gap:8px 0;margin-top:6px;padding-top:16px;border-top:1px solid var(--hair)}
+.so-path span{position:relative;font:500 13px/1 var(--sans);color:var(--ink);padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--hair);white-space:nowrap}
+.so-path span+span{margin-left:22px}
+.so-path span+span::before{content:"";position:absolute;left:-19px;top:50%;width:16px;height:1.5px;background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,211,92,.8))}
+.so-path span:last-child{background:linear-gradient(180deg,#FFE07A,#FFCB45);color:#191205;box-shadow:none}
+.card .so-b{position:absolute;top:calc(clamp(26px,3vw,38px) + 16px);right:clamp(26px,3vw,38px);font:500 11px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:6px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--hair-2)}
+.so.small-piece{background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.01) 55%),rgba(14,20,18,.45)}
+.so.small-piece .wi{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--hair-2);color:var(--body)}
+.so.small-piece .so-path span:last-child{background:rgba(255,255,255,.08);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair-2)}
 
 /* ================= editing only vs content team */
 .vs{position:relative;max-width:920px;margin-inline:auto;border-radius:var(--r-l);overflow:hidden;
