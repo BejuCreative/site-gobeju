@@ -21,10 +21,17 @@
   const tl = document.getElementById('tl'), tc = document.getElementById('tc');
   if (tl && tc) {
     const two = n => String(n).padStart(2, '0');
+    // the page height is read only when it changes; each scroll frame just writes (reading it per scroll event forced a layout)
+    let max = 1, raf = 0, lastTc = '', y = scrollY;
+    const size = () => { max = Math.max(1, document.documentElement.scrollHeight - innerHeight); };
     const scrub = () => {
-      const p = scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight), fr = Math.round(p * 60 * 24);
-      tl.style.setProperty('--p', Math.min(.985, p * .97 + .01)); tc.textContent = `00:00:${two(Math.floor(fr / 24))}:${two(fr % 24)}`;
+      raf = 0;
+      const p = Math.min(1, y / max), fr = Math.round(p * 60 * 24), t = `00:00:${two(Math.floor(fr / 24))}:${two(fr % 24)}`;
+      tl.style.setProperty('--p', Math.min(.985, p * .97 + .01).toFixed(4)); if (t !== lastTc) { lastTc = t; tc.textContent = t; }
     };
-    addEventListener('scroll', scrub, { passive: true }); scrub();
+    addEventListener('scroll', () => { y = scrollY; if (!raf) raf = requestAnimationFrame(scrub); }, { passive: true });
+    addEventListener('resize', () => { size(); scrub(); });
+    if ('ResizeObserver' in window) new ResizeObserver(() => { size(); scrub(); }).observe(document.body);
+    size(); scrub();
   }
 })();

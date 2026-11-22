@@ -17,22 +17,43 @@
     w.innerHTML = h;
   });
 
-  // lines that draw as you read down (the map, the first-month timeline) and map steps that light up
+  // lines that draw as you read down (the map, the first-month timeline) and map steps that light up.
+  // Positions are measured once (load, resize, size changes), never inside a scroll frame: reading layout
+  // right after writing styles forces a full re-layout mid-frame, which was the main cause of the jank.
   const lines = [...document.querySelectorAll('[data-draw]')];
   const steps = [...document.querySelectorAll('.cm-step,.az-step')];
-  const drawLines = () => {
-    const vh = innerHeight;
-    lines.forEach(el => { const r = el.getBoundingClientRect(); el.style.setProperty('--e', calm ? 1 : c01((vh * .62 - r.top) / r.height).toFixed(3)); });
-    steps.forEach(s => s.classList.toggle('lit', calm || s.getBoundingClientRect().top < vh * .62));
+  const docTop = el => { let t = 0; for (let e = el; e; e = e.offsetParent) t += e.offsetTop; return t; };
+  // the scroll position is read in the scroll event (layout is clean there); inside a frame, reading scrollY after
+  // another script wrote styles forces an extra layout
+  let lineM = [], stepM = [], vh = innerHeight, sy = scrollY;
+  const measureLines = () => {
+    vh = innerHeight; sy = scrollY;
+    lineM = lines.map(el => [docTop(el), Math.max(1, el.offsetHeight), '']);
+    stepM = steps.map(el => docTop(el));
   };
+  const drawLines = () => {
+    const y = sy;
+    lines.forEach((el, i) => {
+      const m = lineM[i], v = (calm ? 1 : c01((vh * .62 - (m[0] - y)) / m[1])).toFixed(3);
+      if (m[2] !== v) { m[2] = v; el.style.setProperty('--e', v); }
+    });
+    steps.forEach((el, i) => el.classList.toggle('lit', calm || stepM[i] - y < vh * .62));
+  };
+  measureLines();
 
-  if (!story) { addEventListener('scroll', drawLines, { passive: true }); drawLines(); return; }
+  if (!story) {
+    let r0 = 0;
+    addEventListener('scroll', () => { sy = scrollY; if (!r0) r0 = requestAnimationFrame(() => { r0 = 0; drawLines(); }); }, { passive: true });
+    addEventListener('resize', () => { measureLines(); drawLines(); });
+    drawLines(); return;
+  }
 
   const pin = story.querySelector('.story-pin'), box = story.querySelector('.st-box'), cv = story.querySelector('.st-cv');
   const copy = story.querySelector('.story-copy'), hint = story.querySelector('.story-hint'), end = story.querySelector('.story-end');
   const high = story.dataset.tier === 'high';
   const els = {};
   cv.querySelectorAll('[data-e]').forEach(e => (els[e.dataset.e] = e));
+  const pUsers = [...cv.querySelectorAll('[style*="--at"]')]; let pLast = '';
 
   // ---- poses. Each row: 8 scenes (0 = hero ... 7 = the whole chain). null = same as the scene before.
   // A pose is [x, y, scale, rotate, opacity] in the design space (desktop 1200x760, phone 390x780).
@@ -151,7 +172,8 @@
       if (/^c\d$/.test(k)) o = A[4] * (1 - c01(t / .42)) + B[4] * c01((t - .58) / .42);   // words: one out, then the next in
       put(k, L(A[0], B[0]), y, s, L(A[3], B[3]), o, sx);
     }
-    cv.style.setProperty('--p', p.toFixed(4));
+    const ps = p.toFixed(4);
+    if (ps !== pLast) { pLast = ps; pUsers.forEach(e => e.style.setProperty('--p', ps)); }
     // the hero's words step aside during the first move
     const h = c01(f / .7);
     copy.style.opacity = (1 - c01(h * 1.5)).toFixed(3);
@@ -163,27 +185,40 @@
     end.classList.toggle('on', e > .5);
   };
 
+  // the story's place on the page, measured with the lines (never during a scroll frame)
+  let sTop = 0, sSpan = 1;
+  const measure = () => { measureLines(); sTop = docTop(story); sSpan = Math.max(1, story.offsetHeight - pin.offsetHeight); };
+
   if (calm) {
     story.classList.add('calm');
-    const still = () => { mode(); render(1); copy.style.opacity = 1; copy.style.transform = 'none'; copy.style.visibility = 'visible'; end.style.opacity = 1; end.style.transform = 'none'; };
-    addEventListener('resize', still); still(); drawLines();
-    addEventListener('scroll', drawLines, { passive: true });
+    const still = () => { mode(); measure(); render(1); copy.style.opacity = 1; copy.style.transform = 'none'; copy.style.visibility = 'visible'; end.style.opacity = 1; end.style.transform = 'none'; drawLines(); };
+    addEventListener('resize', still); still();
+    let r0 = 0;
+    addEventListener('scroll', () => { sy = scrollY; if (!r0) r0 = requestAnimationFrame(() => { r0 = 0; drawLines(); }); }, { passive: true });
     return;
   }
 
-  let raf = 0, last = -1;
-  const frame = () => {
+  // scroll sets a target; the drawing eases toward it (time based, ~75 ms), so a jumpy wheel or a fling still moves smoothly
+  let raf = 0, last = -1, shown = -1, prevT = 0;
+  const frame = now => {
     raf = 0;
-    const r = story.getBoundingClientRect(), span = Math.max(1, r.height - pin.offsetHeight);
-    const p = c01(-r.top / span);
-    if (p !== last) { last = p; render(p); }
+    const target = c01((sy - sTop) / sSpan);
+    const dt = prevT ? Math.min(64, now - prevT) : 16; prevT = now;
+    if (shown < 0 || Math.abs(target - shown) > .25) shown = target;   // first frame or a long jump: no slow catch-up
+    else shown += (target - shown) * (1 - Math.exp(-dt / 75));
+    if (Math.abs(target - shown) < .0004) shown = target;
+    if (shown !== last) { last = shown; render(shown); }
     drawLines();
+    if (shown !== target) req(); else prevT = 0;
   };
   const req = () => { if (!raf) raf = requestAnimationFrame(frame); };
-  addEventListener('scroll', req, { passive: true });
-  addEventListener('resize', () => { mode(); last = -1; req(); });
-  mode(); frame();
-  if (document.fonts) document.fonts.ready.then(() => { mode(); last = -1; req(); });
+  const remeasure = () => { mode(); measure(); last = -1; req(); };
+  addEventListener('scroll', () => { sy = scrollY; req(); }, { passive: true });
+  addEventListener('resize', remeasure);
+  if ('ResizeObserver' in window) new ResizeObserver(() => { measure(); req(); }).observe(document.body);
+  mode(); measure(); frame(performance.now());
+  if (document.fonts) document.fonts.ready.then(remeasure);
+  addEventListener('load', remeasure);
 
   // ?story=<0..1> jumps to that point of the story (for screenshots)
   const q = new URLSearchParams(location.search).get('story');

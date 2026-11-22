@@ -55,9 +55,10 @@ void main(){
       size(); addEventListener('resize', size);
       addEventListener('pointermove', e => { tx = e.clientX / innerWidth; ty = 1 - e.clientY / innerHeight; }, { passive: true });
       const t0 = performance.now();
-      const slow = matchMedia('(pointer:coarse)').matches; let last = 0;
+      // the light drifts slowly, so it is drawn at ~30 fps (~24 on phones): half the GPU work, and the scroll keeps the frame budget
+      const gap = matchMedia('(pointer:coarse)').matches ? 42 : 28; let last = 0;
       const draw = now => {
-        if (slow && now - last < 42) { requestAnimationFrame(draw); return; } last = now;
+        if (now - last < gap) { requestAnimationFrame(draw); return; } last = now;
         mx += (tx - mx) * .04; my += (ty - my) * .04;
         gl.uniform2f(ur, cv.width, cv.height); gl.uniform1f(ut, (now - t0) / 1000 + 20); gl.uniform2f(um, mx, my);
         gl.uniform1f(us, scrollY / Math.max(1, document.documentElement.scrollHeight));
@@ -103,8 +104,11 @@ void main(){
   if (fine && !calm) {
     const g = document.createElement('div'); g.className = 'cursor-light'; document.body.append(g);
     let x = innerWidth / 2, y = innerHeight / 2, gx = x, gy = y;
-    addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; }, { passive: true });
-    (function f() { gx += (x - gx) * .08; gy += (y - gy) * .08; g.style.transform = `translate3d(${gx - 260}px,${gy - 260}px,0)`; requestAnimationFrame(f); })();
+    // runs only while the light is still catching up with the cursor, not every frame forever
+    let lr = 0;
+    const f = () => { gx += (x - gx) * .08; gy += (y - gy) * .08; g.style.transform = `translate3d(${gx - 260}px,${gy - 260}px,0)`; lr = Math.abs(x - gx) + Math.abs(y - gy) > .5 ? requestAnimationFrame(f) : 0; };
+    addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; if (!lr) lr = requestAnimationFrame(f); }, { passive: true });
+    f();
   }
 
 

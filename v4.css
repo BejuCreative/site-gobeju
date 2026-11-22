@@ -504,3 +504,8 @@ html:not(.js) .st-box,.story.calm .st-cv .cap:not(.c7){display:none}
 @media(max-width:460px){.az-em .r small:last-child{display:none}.az-em .r{grid-template-columns:auto 1fr}.cw-k{font-size:12px;letter-spacing:.12em}}
 .proofs{padding-bottom:24px}
 @media(max-width:820px){footer{padding-bottom:110px}}
+/* phones: the pinned story's last button and its note sit above the floating Contact button, never behind it */
+@media(max-width:820px){
+  .js .story:not(.calm) .story-note{bottom:calc(14px + env(safe-area-inset-bottom));max-width:200px}
+  .js .story:not(.calm) .story-end{bottom:calc(76px + env(safe-area-inset-bottom))}
+}

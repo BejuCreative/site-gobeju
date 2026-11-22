@@ -58,7 +58,7 @@ section.act{padding-top:clamp(90px,11vw,170px)}
 .split .w{display:inline-block;overflow:hidden;vertical-align:top;padding:.08em .04em .14em;margin:-.08em -.04em -.14em}
 .split .w>span{display:inline-block;transform:translate3d(0,115%,0) rotate(7deg);transform-origin:0 100%;transition:transform 1.25s var(--spring);transition-delay:calc(var(--k)*70ms)}
 .split.in .w>span{transform:none}
-.rv{opacity:0;transform:translate3d(0,34px,0) scale(.985);transition:opacity .9s var(--ease),transform 1.3s var(--spring);transition-delay:calc(var(--i,0)*90ms);will-change:transform,opacity}
+.rv{opacity:0;transform:translate3d(0,34px,0) scale(.985);transition:opacity .9s var(--ease),transform 1.3s var(--spring);transition-delay:calc(var(--i,0)*90ms)}
 .rv.in{opacity:1;transform:none}
 
 /* buttons */
