@@ -116,11 +116,11 @@ void main(){
     const cta = nav.querySelector('.btn'); cta ? nav.insertBefore(btn, cta) : nav.append(btn);
     const sheet = document.createElement('div'); sheet.className = 'menu'; sheet.id = 'menu'; btn.setAttribute('aria-controls', 'menu');
     const items = links.map(a => [a.textContent.trim(), a.getAttribute('href')]);
-    if (!items.some(([, h]) => h === '/guides/')) items.push(['Guides', '/guides/']);
+    // gobeju.com has no /guides/ or /apply/ pages: the menu ends with the one call to action
     const li = items.findIndex(([, h]) => h.startsWith('/portal/'));
     if (li >= 0) items.splice(li + 1, 0, ['Sign up', '/portal/#/signup']);
     sheet.innerHTML = '<nav aria-label="Menu">' + items.map(([t, h], k) => `<a href="${h}" style="--k:${k}">${t}</a>`).join('') + '</nav>' +
-      '<div class="row"><a class="btn primary" href="/apply/">Apply for a free sample</a><a class="btn glass" href="https://cal.com/beju-creative/15min-call">Book a call</a></div>';
+      '<div class="row"><a class="btn primary" href="https://cal.com/beju-creative/15min-call">Book a call</a></div>';
     document.body.append(sheet);
     const root = document.documentElement;
     const set = open => { root.classList.toggle('menu-open', open); btn.setAttribute('aria-expanded', String(open)); btn.setAttribute('aria-label', open ? 'Close the menu' : 'Open the menu'); };
