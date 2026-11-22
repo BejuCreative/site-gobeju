@@ -19,7 +19,7 @@
 
   // lines that draw as you read down (the map, the first-month timeline) and map steps that light up
   const lines = [...document.querySelectorAll('[data-draw]')];
-  const steps = [...document.querySelectorAll('.cm-step')];
+  const steps = [...document.querySelectorAll('.cm-step,.az-step')];
   const drawLines = () => {
     const vh = innerHeight;
     lines.forEach(el => { const r = el.getBoundingClientRect(); el.style.setProperty('--e', calm ? 1 : c01((vh * .62 - r.top) / r.height).toFixed(3)); });
@@ -188,4 +188,21 @@
   // ?story=<0..1> jumps to that point of the story (for screenshots)
   const q = new URLSearchParams(location.search).get('story');
   if (q !== null) addEventListener('load', () => { const r = story.getBoundingClientRect(); scrollTo(0, scrollY + r.top + (+q) * (r.height - pin.offsetHeight)); });
+})();
+
+// Client wall: an endless row of client faces. Each client is added here only after they agree to be shown.
+// Entry: { name: 'Brand or first name', img: '/assets/clients/file.jpg' }  (img: null = a monogram in brand colours)
+// Empty list = the whole section stays hidden.
+const CLIENT_WALL = [];
+(() => {
+  const sec = document.getElementById('clients');
+  if (!sec || !CLIENT_WALL.length) return;
+  const tr = sec.querySelector('.cw-tr'), cols = ['#2F7A5A', '#C9A13A', '#3A6A8A', '#8A5A3A', '#5A3A8A', '#7E9A36', '#8A3A4A'];
+  const esc = t => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const ini = n => n.replace(/^(Dr\.?|The)\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const item = (c, k) => `<li class="cw-i">${c.img ? `<img src="${esc(c.img)}" alt="" width="44" height="44" decoding="async">` : `<span class="cw-mono" style="--c:${cols[k % cols.length]}" aria-hidden="true">${esc(ini(c.name))}</span>`}<span class="n">${esc(c.name)}</span></li>`;
+  const set = CLIENT_WALL.map(item).join('');
+  tr.innerHTML = `<ul class="cw-set" role="list">${set}</ul><ul class="cw-set" aria-hidden="true">${set}</ul>`;
+  tr.style.setProperty('--dur', Math.max(30, CLIENT_WALL.length * 3.2) + 's');
+  sec.hidden = false;
 })();
